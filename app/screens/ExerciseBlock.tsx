@@ -9,9 +9,10 @@ interface ExerciseBlockProps {
   exercise: WorkoutExercise;
   onUpdate: (exercise: WorkoutExercise) => void;
   editable?: boolean;
+  onRemove?: () => void;
 }
 
-export default function ExerciseBlock({ exercise, onUpdate, editable = false }: ExerciseBlockProps) {
+export default function ExerciseBlock({ exercise, onUpdate, editable = false, onRemove }: ExerciseBlockProps) {
   const [expanded, setExpanded] = useState(editable);
 
   const updateSet = (setId: string, field: keyof ExerciseSet, value: number | boolean) => {
@@ -39,20 +40,41 @@ export default function ExerciseBlock({ exercise, onUpdate, editable = false }: 
 
   return (
     <View style={styles.container}>
-      <Pressable onPress={() => setExpanded((prev) => !prev)} style={({ pressed }) => [styles.header, pressed ? styles.pressed : null]}>
-        <View style={styles.headerText}>
-          <Text style={styles.title} numberOfLines={1}>
-            {exercise.name}
-          </Text>
-          <Text style={styles.subtitle}>
-            <Text style={styles.subtitleStrong}>{bestSet?.weight}</Text>
-            <Text style={styles.subtitleMuted}> kg - </Text>
-            <Text style={styles.subtitleStrong}>{exercise.sets.length}</Text>
-            <Text style={styles.subtitleMuted}> sets</Text>
-          </Text>
-        </View>
-        <Text style={styles.chevron}>{expanded ? '^' : 'v'}</Text>
-      </Pressable>
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => setExpanded((prev) => !prev)}
+          style={({ pressed }) => [styles.headerMain, pressed ? styles.pressed : null]}
+          hitSlop={8}
+        >
+          <View style={styles.headerText}>
+            <Text style={styles.title} numberOfLines={1}>
+              {exercise.name}
+            </Text>
+            <Text style={styles.subtitle}>
+              <Text style={styles.subtitleStrong}>{bestSet?.weight}</Text>
+              <Text style={styles.subtitleMuted}> kg - </Text>
+              <Text style={styles.subtitleStrong}>{exercise.sets.length}</Text>
+              <Text style={styles.subtitleMuted}> sets</Text>
+            </Text>
+          </View>
+          <Text style={styles.chevron}>{expanded ? '^' : 'v'}</Text>
+        </Pressable>
+
+        {editable ? (
+          <Pressable
+            onPress={onRemove}
+            disabled={!onRemove}
+            hitSlop={10}
+            style={({ pressed }) => [
+              styles.removeExercise,
+              !onRemove ? styles.disabled : null,
+              pressed && onRemove ? styles.pressed : null,
+            ]}
+          >
+            <Text style={styles.removeExerciseText}>Remove</Text>
+          </Pressable>
+        ) : null}
+      </View>
 
       {expanded ? (
         <View style={styles.body}>
@@ -75,11 +97,14 @@ export default function ExerciseBlock({ exercise, onUpdate, editable = false }: 
             />
           ))}
 
-          {editable ? (
-            <Pressable onPress={addSet} style={({ pressed }) => [styles.addSet, pressed ? styles.pressed : null]}>
-              <Text style={styles.addSetText}>Add set</Text>
-            </Pressable>
-          ) : null}
+        </View>
+      ) : null}
+
+      {editable ? (
+        <View style={styles.footer}>
+          <Pressable onPress={addSet} style={({ pressed }) => [styles.addSet, pressed ? styles.pressed : null]} hitSlop={8}>
+            <Text style={styles.addSetText}>Add set</Text>
+          </Pressable>
         </View>
       ) : null}
     </View>
@@ -91,15 +116,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
+  pressed: {
+    opacity: 0.8,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 14,
   },
-  pressed: {
-    opacity: 0.8,
+  headerMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
   },
   headerText: {
     flex: 1,
@@ -129,7 +160,8 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 8,
+    paddingTop: 4,
   },
   headerRow: {
     flexDirection: 'row',
@@ -146,7 +178,6 @@ const styles = StyleSheet.create({
     width: 36,
   },
   addSet: {
-    marginTop: 8,
     height: 44,
     borderRadius: 12,
     backgroundColor: '#f3f4f6',
@@ -155,6 +186,22 @@ const styles = StyleSheet.create({
   },
   addSetText: {
     color: '#111827',
+    fontWeight: '600',
+  },
+  footer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+  },
+  removeExercise: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#f3f4f6',
+  },
+  removeExerciseText: {
+    color: '#6b7280',
     fontWeight: '600',
   },
 });

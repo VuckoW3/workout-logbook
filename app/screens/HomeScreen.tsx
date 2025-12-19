@@ -19,13 +19,22 @@ export default function HomeScreen({ navigation, lastWorkout, onStartWorkout, on
   const formatDate = (dateString: string) => format(parseISO(dateString), 'EEE, MMM d');
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior="automatic"
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Logbook</Text>
       </View>
 
       <View style={styles.section}>
-        <PrimaryButton onPress={onStartWorkout} style={styles.primaryButton}>
+        <PrimaryButton
+          onPress={onStartWorkout}
+          style={styles.primaryButton}
+          icon={<Text style={styles.primaryButtonIcon}>▶</Text>}
+        >
           Start workout
         </PrimaryButton>
       </View>
@@ -74,50 +83,73 @@ export default function HomeScreen({ navigation, lastWorkout, onStartWorkout, on
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: '#f3f4f6',
+  },
   container: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-    backgroundColor: '#fff',
+    paddingTop: 28,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    backgroundColor: '#f3f4f6',
   },
   header: {
-    paddingTop: 56,
-    paddingBottom: 20,
+    paddingBottom: 18,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#0f172a',
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   primaryButton: {
     width: '100%',
+    height: 64,
+    backgroundColor: '#2563eb',
+    borderRadius: 18,
+    shadowColor: '#2563eb',
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  primaryButtonIcon: {
+    color: '#fff',
+    fontSize: 18,
+    marginRight: 10,
   },
   sectionHeader: {
     marginBottom: 12,
+    color: '#6b7280',
+    letterSpacing: 0.3,
   },
   card: {
     borderRadius: 16,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 16,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   cardDate: {
     color: '#6b7280',
+    fontWeight: '600',
   },
   cardDuration: {
     color: '#6b7280',
+    fontWeight: '600',
   },
   cardBody: {
-    gap: 8,
+    gap: 10,
   },
   exerciseRow: {
     flexDirection: 'row',
@@ -129,9 +161,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
     marginRight: 8,
+    fontSize: 15,
   },
   exerciseMeta: {
     color: '#6b7280',
+    fontSize: 14,
   },
   exerciseMetaStrong: {
     color: '#111827',
@@ -143,20 +177,26 @@ const styles = StyleSheet.create({
   moreText: {
     color: '#6b7280',
     fontSize: 13,
+    marginTop: 2,
   },
   linkCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   linkText: {
     fontWeight: '600',
     color: '#111827',
+    fontSize: 15,
   },
   linkChevron: {
     color: '#9ca3af',
