@@ -1,6 +1,7 @@
 // Ported from web - screen
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, Pressable, LayoutChangeEvent } from 'react-native';
+import Svg, { Polyline, Circle } from 'react-native-svg';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getExerciseMax, getExerciseTimeline } from '../lib/progress';
@@ -10,15 +11,19 @@ export default function ProgressScreen() {
   const [selectedExercise, setSelectedExercise] = useState('Bench Press');
   const insets = useSafeAreaInsets();
   const { workouts } = useWorkouts();
+  const workoutsKey = useMemo(
+    () => `${workouts.length}:${workouts[workouts.length - 1]?.date ?? ''}`,
+    [workouts],
+  );
 
   const timeline = useMemo(
     () => getExerciseTimeline(workouts, selectedExercise),
-    [workouts, selectedExercise],
+    [workoutsKey, selectedExercise],
   );
 
   const bestMaxKg = useMemo(
     () => getExerciseMax(workouts, selectedExercise),
-    [workouts, selectedExercise],
+    [workoutsKey, selectedExercise],
   );
 
   const progressKg = useMemo(() => {
@@ -79,9 +84,7 @@ export default function ProgressScreen() {
           <Text style={styles.cardTitle}>{selectedExercise}</Text>
           <Text style={styles.cardSubtitle}>Max weight over time</Text>
 
-          <View style={styles.chartPlaceholder}>
-            <View style={styles.chartLine} />
-          </View>
+          <Chart timeline={timeline} />
 
           {timeline.length > 0 ? (
             <View style={styles.dataContainer}>
@@ -109,6 +112,59 @@ export default function ProgressScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function Chart({ timeline }: { timeline: { date: string; maxKg: number }[] }) {
+  const [width, setWidth] = useState(0);
+  const height = 180;
+
+  if (timeline.length < 2) {
+    return (
+      <View style={styles.chartPlaceholder}>
+        <View style={styles.chartLine} />
+      </View>
+    );
+  }
+
+  const values = timeline.map((p) => p.maxKg);
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const padding = Math.max((max - min) * 0.05, 2);
+  const domainMax = max + padding;
+  const domainMin = min - padding;
+  const range = domainMax - domainMin || 1;
+
+  const points = timeline.map((point, index) => {
+    const x = width <= 0 ? 0 : (width / (timeline.length - 1)) * index;
+    const y = height - ((point.maxKg - domainMin) / range) * height;
+    return { x, y };
+  });
+
+  const polylinePoints = points.map((p) => `${p.x},${p.y}`).join(' ');
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    setWidth(e.nativeEvent.layout.width);
+  };
+
+  return (
+    <View style={styles.chartPlaceholder} onLayout={onLayout}>
+      {width > 0 ? (
+        <Svg width={width} height={height}>
+          <Polyline
+            points={polylinePoints}
+            fill="none"
+            stroke="#2563eb"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {points.map((p, idx) => (
+            <Circle key={`${p.x}-${idx}`} cx={p.x} cy={p.y} r={4} fill="#2563eb" />
+          ))}
+        </Svg>
+      ) : null}
+    </View>
   );
 }
 
@@ -183,7 +239,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   chartPlaceholder: {
-    height: 220,
+    height: 200,
     borderRadius: 14,
     backgroundColor: '#f8fafc',
     borderWidth: 1,
