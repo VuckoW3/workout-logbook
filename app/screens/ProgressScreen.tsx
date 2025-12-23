@@ -3,27 +3,41 @@ import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { benchPressProgress, exerciseLibrary } from '../lib/mockData';
+import { getExerciseMax, getExerciseTimeline } from '../lib/progress';
+import { useWorkouts } from '../store/useWorkouts';
 
 export default function ProgressScreen() {
   const [selectedExercise, setSelectedExercise] = useState('Bench Press');
   const insets = useSafeAreaInsets();
+  const { workouts } = useWorkouts();
 
-  const data = useMemo(() => {
-    return selectedExercise === 'Bench Press' ? benchPressProgress : [];
-  }, [selectedExercise]);
-
-  const uniqueExercises = useMemo(
-    () => Array.from(new Set(exerciseLibrary.map((ex) => ex.name))).slice(0, 6),
-    [],
+  const timeline = useMemo(
+    () => getExerciseTimeline(workouts, selectedExercise),
+    [workouts, selectedExercise],
   );
 
-  const latestEntry = data[data.length - 1];
-  const maxWeight = data.reduce((max, item) => Math.max(max, item.maxWeight), 0);
+  const bestMaxKg = useMemo(
+    () => getExerciseMax(workouts, selectedExercise),
+    [workouts, selectedExercise],
+  );
+
+  const progressKg = useMemo(() => {
+    if (!timeline.length) return 0;
+    const first = timeline[0]?.maxKg ?? 0;
+    const last = timeline[timeline.length - 1]?.maxKg ?? 0;
+    return last - first;
+  }, [timeline]);
+
+  const uniqueExercises = useMemo(() => {
+    const names = new Set<string>();
+    workouts.forEach((w) => w.exercises.forEach((ex) => names.add(ex.name)));
+    return Array.from(names);
+  }, [workouts]);
+
   const stats = [
-    { label: 'Latest max', value: latestEntry ? `${latestEntry.maxWeight} kg` : '—' },
-    { label: 'Best max', value: maxWeight ? `${maxWeight} kg` : '—' },
-    { label: 'Entries', value: data.length ? `${data.length}` : '0' },
+    { label: 'Best max', value: `${bestMaxKg} kg` },
+    { label: 'Progress', value: `${progressKg >= 0 ? '+' : ''}${progressKg} kg` },
+    { label: 'Entries', value: `${timeline.length}` },
   ];
 
   return (
@@ -69,12 +83,12 @@ export default function ProgressScreen() {
             <View style={styles.chartLine} />
           </View>
 
-          {data.length > 0 ? (
+          {timeline.length > 0 ? (
             <View style={styles.dataContainer}>
-              {data.map((item) => (
+              {timeline.map((item) => (
                 <View key={item.date} style={styles.row}>
                   <Text style={styles.rowLabel}>{item.date}</Text>
-                  <Text style={styles.rowValue}>{item.maxWeight} kg</Text>
+                  <Text style={styles.rowValue}>{item.maxKg} kg</Text>
                 </View>
               ))}
             </View>

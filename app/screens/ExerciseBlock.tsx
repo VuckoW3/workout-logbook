@@ -67,7 +67,7 @@ export default function ExerciseBlock({ exercise, onUpdate, editable = false, on
             hitSlop={10}
             style={({ pressed }) => [
               styles.removeExercise,
-              !onRemove ? styles.disabled : null,
+              !onRemove ? styles.removeDisabled : null,
               pressed && onRemove ? styles.pressed : null,
             ]}
           >
@@ -199,6 +199,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
     backgroundColor: '#f3f4f6',
+  },
+  removeDisabled: {
+    opacity: 0.4,
   },
   removeExerciseText: {
     color: '#6b7280',
