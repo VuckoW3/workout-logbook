@@ -7,6 +7,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import PrimaryButton from '../components/ui/PrimaryButton';
 import ScreenHeader from '../components/ui/ScreenHeader';
 import { buildLastExerciseSetsMap, getPrefilledSets } from '../lib/exercisePrefill';
+import { getProgressionHints } from '../lib/exerciseProgression';
 import ExerciseBlock from './ExerciseBlock';
 import AddExerciseScreen from './AddExerciseScreen';
 import { ExerciseDefinition, Workout, WorkoutExercise } from '../types/workout';
@@ -113,6 +114,7 @@ export default function WorkoutScreen({
                 exercise={exercise}
                 onUpdate={handleUpdateExercise}
                 editable={isActive}
+                progressionHints={getProgressionHints(exercisePrefillMap, exercise.name, exercise.sets)}
                 onRemove={
                   isActive
                     ? () =>

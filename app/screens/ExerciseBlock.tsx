@@ -10,9 +10,16 @@ interface ExerciseBlockProps {
   onUpdate: (exercise: WorkoutExercise) => void;
   editable?: boolean;
   onRemove?: () => void;
+  progressionHints?: string[];
 }
 
-export default function ExerciseBlock({ exercise, onUpdate, editable = false, onRemove }: ExerciseBlockProps) {
+export default function ExerciseBlock({
+  exercise,
+  onUpdate,
+  editable = false,
+  onRemove,
+  progressionHints,
+}: ExerciseBlockProps) {
   const [expanded, setExpanded] = useState(editable);
 
   const updateSet = (setId: string, field: keyof ExerciseSet, value: number | boolean) => {
@@ -24,8 +31,8 @@ export default function ExerciseBlock({ exercise, onUpdate, editable = false, on
     const lastSet = exercise.sets[exercise.sets.length - 1];
     const newSet: ExerciseSet = {
       id: `s-${Date.now()}`,
-      weight: lastSet?.weight || 0,
-      reps: lastSet?.reps || 0,
+      weight: lastSet?.weight ?? 0,
+      reps: lastSet?.reps ?? 0,
       completed: false,
     };
     onUpdate({ ...exercise, sets: [...exercise.sets, newSet] });
@@ -94,6 +101,7 @@ export default function ExerciseBlock({ exercise, onUpdate, editable = false, on
               onUpdate={(field, value) => updateSet(set.id, field, value)}
               onRemove={() => removeSet(set.id)}
               canRemove={exercise.sets.length > 1}
+              hint={progressionHints?.[index]}
             />
           ))}
 

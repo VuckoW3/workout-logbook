@@ -11,56 +11,62 @@ interface SetRowProps {
   onUpdate?: (field: keyof ExerciseSet, value: number | boolean) => void;
   onRemove?: () => void;
   canRemove?: boolean;
+  hint?: string;
 }
 
-const SetRow = ({ set, index, editable = false, onUpdate, onRemove, canRemove = true }: SetRowProps) => {
+const SetRow = ({ set, index, editable = false, onUpdate, onRemove, canRemove = true, hint }: SetRowProps) => {
   return (
-    <View style={styles.row}>
-      <Text style={styles.index}>{index + 1}</Text>
+    <View style={styles.rowContainer}>
+      <View style={styles.row}>
+        <Text style={styles.index}>{index + 1}</Text>
 
-      {editable ? (
-        <>
-          <Input
-            keyboardType="decimal-pad"
-            value={set.weight !== undefined ? String(set.weight) : ''}
-            onChangeText={(value) => onUpdate?.('weight', parseFloat(value) || 0)}
-            style={styles.input}
-            placeholder="0"
-          />
-          <Input
-            keyboardType="number-pad"
-            value={set.reps !== undefined ? String(set.reps) : ''}
-            onChangeText={(value) => onUpdate?.('reps', parseInt(value, 10) || 0)}
-            style={styles.input}
-            placeholder="0"
-          />
-          <Pressable
-            onPress={onRemove}
-            disabled={!canRemove}
-            style={({ pressed }) => [
-              styles.removeButton,
-              !canRemove ? styles.disabled : null,
-              pressed && canRemove ? styles.pressed : null,
-            ]}
-          >
-            <Text style={styles.removeText}>-</Text>
-          </Pressable>
-        </>
-      ) : (
-        <>
-          <Text style={styles.value}>{set.weight}</Text>
-          <Text style={styles.value}>{set.reps}</Text>
-        </>
-      )}
+        {editable ? (
+          <>
+            <Input
+              keyboardType="decimal-pad"
+              value={set.weight !== undefined ? String(set.weight) : ''}
+              onChangeText={(value) => onUpdate?.('weight', parseFloat(value) || 0)}
+              style={styles.input}
+              placeholder="0"
+            />
+            <Input
+              keyboardType="number-pad"
+              value={set.reps !== undefined ? String(set.reps) : ''}
+              onChangeText={(value) => onUpdate?.('reps', parseInt(value, 10) || 0)}
+              style={styles.input}
+              placeholder="0"
+            />
+            <Pressable
+              onPress={onRemove}
+              disabled={!canRemove}
+              style={({ pressed }) => [
+                styles.removeButton,
+                !canRemove ? styles.disabled : null,
+                pressed && canRemove ? styles.pressed : null,
+              ]}
+            >
+              <Text style={styles.removeText}>-</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Text style={styles.value}>{set.weight}</Text>
+            <Text style={styles.value}>{set.reps}</Text>
+          </>
+        )}
+      </View>
+      {editable && hint ? <Text style={styles.hint}>{hint}</Text> : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  rowContainer: {
+    marginBottom: 8,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
   index: {
     width: 32,
@@ -101,6 +107,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
+  },
+  hint: {
+    marginLeft: 32,
+    marginTop: 4,
+    fontSize: 12,
+    color: '#9ca3af',
   },
 });
 
