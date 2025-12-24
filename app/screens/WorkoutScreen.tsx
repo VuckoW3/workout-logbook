@@ -6,7 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import PrimaryButton from '../components/ui/PrimaryButton';
 import ScreenHeader from '../components/ui/ScreenHeader';
-import { exerciseLibrary } from '../lib/mockData';
+import { buildLastExerciseSetsMap, getPrefilledSets } from '../lib/exercisePrefill';
 import ExerciseBlock from './ExerciseBlock';
 import AddExerciseScreen from './AddExerciseScreen';
 import { ExerciseDefinition, Workout, WorkoutExercise } from '../types/workout';
@@ -38,12 +38,14 @@ export default function WorkoutScreen({
     return workouts.find((w) => w.id === workoutId) || null;
   }, [mode, workoutId, activeWorkout, workouts]);
 
+  const exercisePrefillMap = useMemo(() => buildLastExerciseSetsMap(workouts), [workouts]);
+
   const handleAddExercise = (exerciseDef: ExerciseDefinition) => {
     if (!activeWorkout) return;
     const newExercise: WorkoutExercise = {
       id: `ex-${Date.now()}`,
       name: exerciseDef.name,
-      sets: [{ id: `s-${Date.now()}`, weight: 0, reps: 0, completed: false }],
+      sets: getPrefilledSets(exercisePrefillMap, exerciseDef.name),
     };
     onUpdateActive({ ...activeWorkout, exercises: [...activeWorkout.exercises, newExercise] });
     setShowAddExercise(false);
