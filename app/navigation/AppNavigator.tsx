@@ -7,10 +7,15 @@ import HistoryScreen from '../screens/HistoryScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import TemplatesScreen from '../screens/TemplatesScreen';
 import WorkoutScreen from '../screens/WorkoutScreen';
 import { HistoryStackParamList, HomeStackParamList, ProgressStackParamList } from './types';
-import { Workout } from '../types/workout';
+import { ExerciseDefinition, Workout, WorkoutExercise, WorkoutTemplate } from '../types/workout';
 import { useWorkouts } from '../store/useWorkouts';
+import { useTemplates } from '../store/useTemplates';
+import { useCustomExercises } from '../lib/useCustomExercises';
+import { exerciseLibrary } from '../lib/mockData';
+import { buildLastExerciseSetsMap, getPrefilledSets } from '../lib/exercisePrefill';
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
@@ -23,13 +28,48 @@ function HomeStackNavigator({
   setActiveWorkout,
   setWorkouts,
   lastWorkout,
+  templates,
+  setTemplates,
+  exerciseDefinitions,
+  customExercises,
+  addCustomExercise,
 }: {
   workouts: Workout[];
   activeWorkout: Workout | null;
   setActiveWorkout: (workout: Workout | null) => void;
   setWorkouts: (workouts: Workout[]) => Promise<void> | void;
   lastWorkout?: Workout;
+  templates: WorkoutTemplate[];
+  setTemplates: (templates: WorkoutTemplate[]) => Promise<void> | void;
+  exerciseDefinitions: ExerciseDefinition[];
+  customExercises: ExerciseDefinition[];
+  addCustomExercise: (name: string, category: string) => ExerciseDefinition;
 }) {
+  const exercisePrefillMap = useMemo(() => buildLastExerciseSetsMap(workouts), [workouts]);
+
+  const startFromTemplate = (template: WorkoutTemplate, navigation: any) => {
+    const exercises: WorkoutExercise[] = template.exerciseIds
+      .map((id, index) => {
+        const def = exerciseDefinitions.find((ex) => ex.id === id);
+        if (!def) return null;
+        return {
+          id: `ex-${Date.now()}-${index}`,
+          name: def.name,
+          sets: getPrefilledSets(exercisePrefillMap, def.name),
+        };
+      })
+      .filter(Boolean) as WorkoutExercise[];
+
+    const newWorkout: Workout = {
+      id: `w-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      exercises,
+      completed: false,
+    };
+    setActiveWorkout(newWorkout);
+    navigation.navigate('Workout', { mode: 'active', workoutId: newWorkout.id });
+  };
+
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen name="Home">
@@ -48,6 +88,30 @@ function HomeStackNavigator({
               props.navigation.navigate('Workout', { mode: 'active', workoutId: newWorkout.id });
             }}
             onViewHistory={() => props.navigation.getParent()?.navigate('HistoryTab')}
+            onViewTemplates={() => props.navigation.navigate('Templates')}
+          />
+        )}
+      </HomeStack.Screen>
+      <HomeStack.Screen name="Templates">
+        {(props) => (
+          <TemplatesScreen
+            {...props}
+            templates={templates}
+            exercises={exerciseDefinitions}
+            customExercises={customExercises}
+            onAddCustomExercise={addCustomExercise}
+            onSaveTemplate={(template) => {
+              const exists = templates.find((t) => t.id === template.id);
+              const next = exists
+                ? templates.map((t) => (t.id === template.id ? template : t))
+                : [template, ...templates];
+              void setTemplates(next);
+            }}
+            onDeleteTemplate={(templateId) => {
+              const next = templates.filter((t) => t.id !== templateId);
+              void setTemplates(next);
+            }}
+            onStartFromTemplate={(template) => startFromTemplate(template, props.navigation)}
           />
         )}
       </HomeStack.Screen>
@@ -74,6 +138,8 @@ function HomeStackNavigator({
               setActiveWorkout(null);
               props.navigation.navigate('Home');
             }}
+            customExercises={customExercises}
+            onAddCustomExercise={addCustomExercise}
           />
         )}
       </HomeStack.Screen>
@@ -146,9 +212,15 @@ function ProgressStackNavigator() {
 
 export function AppNavigator() {
   const { workouts, setWorkouts } = useWorkouts();
+  const { templates, setTemplates } = useTemplates();
+  const { customExercises } = useCustomExercises();
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
 
   const lastWorkout = useMemo(() => workouts[0], [workouts]);
+  const exerciseDefinitions = useMemo<ExerciseDefinition[]>(
+    () => [...exerciseLibrary, ...customExercises],
+    [customExercises],
+  );
 
   return (
     <Tab.Navigator
@@ -159,14 +231,17 @@ export function AppNavigator() {
       <Tab.Screen name="HomeTab" options={{ title: 'Home' }}>
         {() => (
           <HomeStackNavigator
-            workouts={workouts}
-            activeWorkout={activeWorkout}
-            setActiveWorkout={setActiveWorkout}
-            setWorkouts={setWorkouts}
-            lastWorkout={lastWorkout}
-          />
-        )}
-      </Tab.Screen>
+          workouts={workouts}
+          activeWorkout={activeWorkout}
+          setActiveWorkout={setActiveWorkout}
+          setWorkouts={setWorkouts}
+          lastWorkout={lastWorkout}
+          templates={templates}
+          setTemplates={setTemplates}
+          exerciseDefinitions={exerciseDefinitions}
+        />
+      )}
+    </Tab.Screen>
       <Tab.Screen name="HistoryTab" options={{ title: 'History' }}>
         {() => (
           <HistoryStackNavigator

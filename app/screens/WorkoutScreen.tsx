@@ -19,6 +19,8 @@ type Props = NativeStackScreenProps<HomeStackParamList & HistoryStackParamList, 
   onUpdateActive: (workout: Workout) => void;
   onFinishActive: () => void;
   onCancelActive: () => void;
+  customExercises?: ExerciseDefinition[];
+  onAddCustomExercise?: (name: string, category: string) => ExerciseDefinition;
 };
 
 export default function WorkoutScreen({
@@ -29,6 +31,8 @@ export default function WorkoutScreen({
   onUpdateActive,
   onFinishActive,
   onCancelActive,
+  customExercises,
+  onAddCustomExercise,
 }: Props) {
   const { mode, workoutId } = route.params;
   const [showAddExercise, setShowAddExercise] = useState(false);
@@ -61,7 +65,14 @@ export default function WorkoutScreen({
   };
 
   if (showAddExercise && mode === 'active' && activeWorkout) {
-    return <AddExerciseScreen onSelect={handleAddExercise} onClose={() => setShowAddExercise(false)} />;
+    return (
+      <AddExerciseScreen
+        onSelect={handleAddExercise}
+        onClose={() => setShowAddExercise(false)}
+        customExercises={customExercises}
+        onAddCustomExercise={onAddCustomExercise}
+      />
+    );
   }
 
   if (!workout) {

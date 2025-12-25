@@ -30,3 +30,9 @@ export interface ExerciseProgress {
   maxWeight: number;
   totalVolume: number;
 }
+
+export interface WorkoutTemplate {
+  id: string;
+  name: string;
+  exerciseIds: string[];
+}

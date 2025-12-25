@@ -12,14 +12,18 @@ import AddCustomExerciseScreen from './AddCustomExerciseScreen';
 interface AddExerciseScreenProps {
   onSelect: (exercise: ExerciseDefinition) => void;
   onClose: () => void;
+  customExercises?: ExerciseDefinition[];
+  onAddCustomExercise?: (name: string, category: string) => ExerciseDefinition;
 }
 
-export default function AddExerciseScreen({ onSelect, onClose }: AddExerciseScreenProps) {
+export default function AddExerciseScreen({ onSelect, onClose, customExercises: providedCustomExercises, onAddCustomExercise }: AddExerciseScreenProps) {
   const [query, setQuery] = useState('');
   const [showAddCustom, setShowAddCustom] = useState(false);
   const { customExercises, addCustomExercise } = useCustomExercises();
+  const mergedCustomExercises = providedCustomExercises ?? customExercises;
+  const addCustom = onAddCustomExercise ?? addCustomExercise;
 
-  const allExercises = useMemo(() => [...exerciseLibrary, ...customExercises], [customExercises]);
+  const allExercises = useMemo(() => [...exerciseLibrary, ...mergedCustomExercises], [mergedCustomExercises]);
 
   const filteredExercises = useMemo(() => {
     if (!query.trim()) return allExercises;
@@ -41,7 +45,7 @@ export default function AddExerciseScreen({ onSelect, onClose }: AddExerciseScre
   if (showAddCustom) {
     return (
       <AddCustomExerciseScreen
-        onSave={addCustomExercise}
+        onSave={addCustom}
         onClose={() => setShowAddCustom(false)}
         onSelect={onSelect}
       />

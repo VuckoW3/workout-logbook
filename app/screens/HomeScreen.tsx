@@ -13,9 +13,10 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'Home'> & {
   lastWorkout?: Workout;
   onStartWorkout: () => void;
   onViewHistory: () => void;
+  onViewTemplates: () => void;
 };
 
-export default function HomeScreen({ navigation, lastWorkout, onStartWorkout, onViewHistory }: Props) {
+export default function HomeScreen({ navigation, lastWorkout, onStartWorkout, onViewHistory, onViewTemplates }: Props) {
   const formatDate = (dateString: string) => format(parseISO(dateString), 'EEE, MMM d');
 
   return (
@@ -37,6 +38,16 @@ export default function HomeScreen({ navigation, lastWorkout, onStartWorkout, on
         >
           Start workout
         </PrimaryButton>
+      </View>
+
+      <View style={styles.section}>
+        <Pressable
+          onPress={onViewTemplates}
+          style={({ pressed }) => [styles.linkCard, pressed ? styles.pressed : null]}
+        >
+          <Text style={styles.linkText}>Start from template</Text>
+          <Text style={styles.linkChevron}>{'>'}</Text>
+        </Pressable>
       </View>
 
       {lastWorkout ? (
