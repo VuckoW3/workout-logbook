@@ -17,6 +17,8 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'Templates'> & {
   onAddCustomExercise?: (name: string, category: string) => ExerciseDefinition;
 };
 
+const NEW_TEMPLATE_ID = 'new-template';
+
 const createBlankTemplate = (): WorkoutTemplate => ({
   id: `tpl-${Date.now()}`,
   name: 'New template',
@@ -54,7 +56,7 @@ export default function TemplatesScreen({
 
   const handleNew = () => {
     const tpl = createBlankTemplate();
-    setEditingId(tpl.id);
+    setEditingId(NEW_TEMPLATE_ID);
     setDraft(tpl);
   };
 
@@ -86,18 +88,19 @@ export default function TemplatesScreen({
     setShowAddExercise(false);
   };
 
+  const isCreatingNew = editingId === NEW_TEMPLATE_ID;
   const selectedTemplateExists = useMemo(
-    () => (editingId ? templates.some((t) => t.id === editingId) : false),
-    [editingId, templates],
+    () => (editingId && !isCreatingNew ? templates.some((t) => t.id === editingId) : false),
+    [editingId, isCreatingNew, templates],
   );
 
   // Close edit UI if selected template was removed from list (and it's not a new unsaved draft)
   React.useEffect(() => {
-    if (editingId && !selectedTemplateExists && draft && templates.length > 0) {
+    if (editingId && !isCreatingNew && !selectedTemplateExists && draft && templates.length > 0) {
       setEditingId(null);
       setDraft(null);
     }
-  }, [editingId, selectedTemplateExists, draft, templates.length]);
+  }, [editingId, isCreatingNew, selectedTemplateExists, draft, templates.length]);
 
   if (showAddExercise && draft) {
     return (
