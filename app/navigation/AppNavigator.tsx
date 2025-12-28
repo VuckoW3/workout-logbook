@@ -47,6 +47,40 @@ function HomeStackNavigator({
 }) {
   const exercisePrefillMap = useMemo(() => buildLastExerciseSetsMap(workouts), [workouts]);
 
+  const buildWorkout = (exercises: WorkoutExercise[]): Workout => ({
+    id: `w-${Date.now()}`,
+    date: new Date().toISOString().split('T')[0],
+    exercises,
+    completed: false,
+  });
+
+  const upsertWorkout = (updated: Workout) => {
+    const index = workouts.findIndex((workout) => workout.id === updated.id);
+    const next =
+      index === -1
+        ? [updated, ...workouts]
+        : workouts.map((workout, idx) => (idx === index ? updated : workout));
+    void setWorkouts(next);
+  };
+
+  const removeWorkout = (workoutId: string) => {
+    const next = workouts.filter((workout) => workout.id !== workoutId);
+    if (next.length !== workouts.length) {
+      void setWorkouts(next);
+    }
+  };
+
+  const beginWorkout = (exercises: WorkoutExercise[], navigation: any) => {
+    const newWorkout = buildWorkout(exercises);
+    upsertWorkout(newWorkout);
+    setActiveWorkout(newWorkout);
+    navigation.navigate('Workout', { mode: 'active', workoutId: newWorkout.id });
+  };
+
+  const handleUpdateActive = (workout: Workout) => {
+    setActiveWorkout(workout);
+  };
+
   const startFromTemplate = (template: WorkoutTemplate, navigation: any) => {
     const exercises: WorkoutExercise[] = template.exerciseIds
       .map((id, index) => {
@@ -59,13 +93,7 @@ function HomeStackNavigator({
         };
       })
       .filter(Boolean) as WorkoutExercise[];
-
-    const newWorkout: Workout = {
-      id: `w-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
-      exercises,
-      completed: false,
-    };
+    const newWorkout = buildWorkout(exercises);
     setActiveWorkout(newWorkout);
     navigation.navigate('Workout', { mode: 'active', workoutId: newWorkout.id });
   };
@@ -78,14 +106,7 @@ function HomeStackNavigator({
             {...props}
             lastWorkout={lastWorkout}
             onStartWorkout={() => {
-              const newWorkout: Workout = {
-                id: `w-${Date.now()}`,
-                date: new Date().toISOString().split('T')[0],
-                exercises: [],
-                completed: false,
-              };
-              setActiveWorkout(newWorkout);
-              props.navigation.navigate('Workout', { mode: 'active', workoutId: newWorkout.id });
+              beginWorkout([], props.navigation);
             }}
             onViewHistory={() => props.navigation.getParent()?.navigate('HistoryTab')}
             onViewTemplates={() => props.navigation.navigate('Templates')}
@@ -121,7 +142,7 @@ function HomeStackNavigator({
             {...props}
             activeWorkout={activeWorkout}
             workouts={workouts}
-            onUpdateActive={(workout) => setActiveWorkout(workout)}
+            onUpdateActive={handleUpdateActive}
             onFinishActive={() => {
               if (activeWorkout && activeWorkout.exercises.length > 0) {
                 const completed: Workout = {
@@ -129,12 +150,18 @@ function HomeStackNavigator({
                   completed: true,
                   duration: Math.floor(Math.random() * 30) + 30,
                 };
-                void setWorkouts([completed, ...workouts]);
+                upsertWorkout(completed);
+              }
+              if (activeWorkout && activeWorkout.exercises.length === 0) {
+                removeWorkout(activeWorkout.id);
               }
               setActiveWorkout(null);
               props.navigation.navigate('Home');
             }}
             onCancelActive={() => {
+              if (activeWorkout) {
+                removeWorkout(activeWorkout.id);
+              }
               setActiveWorkout(null);
               props.navigation.navigate('Home');
             }}
